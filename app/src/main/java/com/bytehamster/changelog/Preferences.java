@@ -3,6 +3,7 @@ package com.bytehamster.changelog;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
+import org.omnirom.omnichange.R;
 
 public class Preferences extends AppCompatActivity {
     @Override

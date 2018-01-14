@@ -2,6 +2,9 @@ package com.bytehamster.changelog;
 
 import android.content.Context;
 import android.view.View;
+
+import org.omnirom.omnichange.R;
+
 import java.util.HashMap;
 
 class Change {

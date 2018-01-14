@@ -1,7 +1,5 @@
 package com.bytehamster.changelog;
 
-import java.util.ArrayList;
-import java.util.Map;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -13,6 +11,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
+
+import org.omnirom.omnichange.R;
+
+import java.util.ArrayList;
+import java.util.Map;
 
 class ChangeAdapter extends BaseAdapter {
 

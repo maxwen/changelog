@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.bytehamster.changelog"
+    package="org.omnirom.omnichange"
     android:versionCode="36"
     android:versionName="3.15" >
 
@@ -15,7 +15,7 @@
         android:supportsRtl="false">
         
         <activity
-            android:name="com.bytehamster.changelog.Main"
+            android:name=".OmniMain"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -24,7 +24,7 @@
         </activity>
         
         <activity
-            android:name=".Preferences"
+            android:name="com.bytehamster.changelog.Preferences"
             android:label="@string/settings"
             android:theme="@style/Theme.MyTheme" />
         

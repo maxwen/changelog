@@ -17,6 +17,8 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.omnirom.omnichange.R;
+
 public class PreferenceFragment extends PreferenceFragmentCompat {
 
     @Override
