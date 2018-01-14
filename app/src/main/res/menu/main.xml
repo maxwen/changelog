@@ -17,9 +17,5 @@
         android:id="@+id/action_settings"
         app:showAsAction="never"
         android:title="@string/settings"/>
-    <item
-        android:id="@+id/action_feedback"
-        app:showAsAction="never"
-        android:title="@string/feedback"/>
 
 </menu>
