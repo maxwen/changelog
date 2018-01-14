@@ -320,20 +320,6 @@ public class Main extends AppCompatActivity {
                 Intent i = new Intent(this, Preferences.class);
                 startActivity(i);
                 return true;
-            case R.id.action_feedback:
-                AlertDialog.Builder d2 = new AlertDialog.Builder(mActivity);
-                d2.setCancelable(true);
-                d2.setTitle(R.string.feedback);
-                d2.setMessage(R.string.feedback_warning);
-                d2.setNegativeButton(R.string.cancel, null);
-                d2.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        External.feedbackMail(mActivity, "OmniROM Changelog: Feedback", "");
-                    }
-                });
-                d2.show().setCanceledOnTouchOutside(true);
-                return true;
             default:
                 return super.onOptionsItemSelected(item);
 	    }
