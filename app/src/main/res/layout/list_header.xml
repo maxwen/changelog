@@ -21,7 +21,7 @@
             android:singleLine="true"
             android:textAllCaps="true"
             android:text=""
-            android:textColor="#ff000000"
+            android:textColor="?android:attr/textColorPrimary"
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
 

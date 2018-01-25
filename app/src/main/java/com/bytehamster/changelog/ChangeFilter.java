@@ -26,9 +26,9 @@ class ChangeFilter {
 
     public ChangeFilter(SharedPreferences prefs) {
         this.prefs = prefs;
-        displayAll = prefs.getBoolean("display_all", true);
-        translations = prefs.getBoolean("translations", true);
-        twrp = prefs.getBoolean("show_twrp", true);
+        displayAll = prefs.getBoolean("display_all", false);
+        translations = prefs.getBoolean("translations", false);
+        twrp = prefs.getBoolean("show_twrp", false);
         branch = prefs.getString("branch", Main.DEFAULT_BRANCH);
         refreshWatchedDevices();
     }
@@ -57,7 +57,7 @@ class ChangeFilter {
     }
 
     void refreshWatchedDevices() {
-        String watchedDevices = prefs.getString("watched_devices", "<?xml version=\"1.0\" encoding=\"UTF-8\"?><devicesList></devicesList>");
+        String watchedDevices = prefs.getString("watched_devices", getDefaultDeviceFilter());
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             DocumentBuilder db;
@@ -81,5 +81,14 @@ class ChangeFilter {
         catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private String getDefaultDevice() {
+        return System.getProperty("ro.omni.device");
+    }
+
+    private String getDefaultDeviceFilter() {
+        String device = getDefaultDevice();
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><devicesList>" + device + "</devicesList>";
     }
 }

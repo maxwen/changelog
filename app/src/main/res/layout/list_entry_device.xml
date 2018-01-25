@@ -20,7 +20,7 @@
             android:singleLine="true"
             android:text=""
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="#ff000000" />
+            android:textColor="?android:attr/textColorPrimary" />
 
         <TextView
             android:id="@+id/code"
@@ -29,15 +29,7 @@
             android:singleLine="true"
             android:text=""
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="#ffaaaaaa" />
+            android:textColor="?android:attr/textColorSecondary" />
     </LinearLayout>
-
-    <TextView
-        android:id="@+id/aside"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:textColor="#ffcc0000" />
 
 </LinearLayout>

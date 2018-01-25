@@ -39,7 +39,7 @@
                 android:singleLine="true"
                 android:text="@string/error"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textColor="#000000" />
+                android:textColor="?android:attr/textColorPrimary" />
         </LinearLayout>
 
         <TextView
@@ -49,7 +49,7 @@
             android:singleLine="true"
             android:text="@string/error"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="#999999" />
+            android:textColor="?android:attr/textColorSecondary" />
 
         <TextView
             android:id="@+id/info"
@@ -59,7 +59,8 @@
             android:text="@string/error"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:textSize="16sp"
-            android:visibility="gone" />
+            android:visibility="gone"
+            android:textColor="?android:attr/textColorPrimary" />
 
         <LinearLayout
             android:id="@+id/buttons"

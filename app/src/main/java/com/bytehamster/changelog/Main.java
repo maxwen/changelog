@@ -1,8 +1,8 @@
 package com.bytehamster.changelog;
 
 import android.app.Activity;
+import android.app.DatePickerDialog;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
@@ -15,25 +15,18 @@ import android.preference.PreferenceManager;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.text.Editable;
-import android.text.Html;
-import android.text.TextWatcher;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.animation.AlphaAnimation;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
-import android.widget.EditText;
+import android.widget.DatePicker;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
@@ -49,6 +42,7 @@ import org.xml.sax.InputSource;
 import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -59,7 +53,7 @@ import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-public class Main extends AppCompatActivity {
+public class Main extends AppCompatActivity  {
 
     public static final String                   DEFAULT_GERRIT_URL   = "https://gerrit.omnirom.org/";
     public static final String                   DEFAULT_BRANCH       = "android-8.1";
@@ -143,7 +137,7 @@ public class Main extends AppCompatActivity {
 
     private void checkAlerts(){
 
-        if (! mSharedPreferences.getBoolean("warning_displayed", false)) {
+        /*if (! mSharedPreferences.getBoolean("warning_displayed", false)) {
             AlertDialog.Builder d = new AlertDialog.Builder(mActivity);
             d.setCancelable(false);
             d.setTitle(R.string.first_warning);
@@ -155,9 +149,9 @@ public class Main extends AppCompatActivity {
                 }
             });
             d.show();
-        }
+        }*/
 
-        if (!Build.DISPLAY.contains("omni") && !mSharedPreferences.getBoolean("openApp", false)) {
+        /*if (!Build.DISPLAY.contains("omni") && !mSharedPreferences.getBoolean("openApp", false)) {
             AlertDialog.Builder d = new AlertDialog.Builder(mActivity);
             d.setCancelable(false);
             d.setTitle(R.string.not_supported);
@@ -175,7 +169,7 @@ public class Main extends AppCompatActivity {
                 }
             });
             d.show();
-        }
+        }*/
     }
 
     private void load() {
@@ -298,7 +292,7 @@ public class Main extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
-            case R.id.action_info:
+            /*case R.id.action_info:
     
                 String msg = getResources().getString(R.string.info_content);
                 msg = msg.replace("%buildtime", mDateFormat.format(Build.TIME));
@@ -313,7 +307,7 @@ public class Main extends AppCompatActivity {
                 return true;
             case R.id.action_refresh:
                 load();
-                return true;
+                return true;*/
             case R.id.action_filter:
                 filter();
                 return true;
@@ -333,7 +327,7 @@ public class Main extends AppCompatActivity {
             DocumentBuilder db;
             db = dbf.newDocumentBuilder();
             InputSource is = new InputSource();
-            is.setCharacterStream(new StringReader(mSharedPreferences.getString("watched_devices", "<?xml version=\"1.0\" encoding=\"UTF-8\"?><devicesList></devicesList>")));
+            is.setCharacterStream(new StringReader(mSharedPreferences.getString("watched_devices", getDefaultDeviceFilter())));
             mWatchedDoc = db.parse(is);
             mWatchedDoc.getDocumentElement().normalize();
         }
@@ -360,11 +354,11 @@ public class Main extends AppCompatActivity {
 
         d.setCanceledOnTouchOutside(true);
 
-        ((CheckBox) root.findViewById(R.id.translations)).setChecked(mSharedPreferences.getBoolean("translations", true));
-        ((CheckBox) root.findViewById(R.id.show_twrp)).setChecked(mSharedPreferences.getBoolean("show_twrp", true));
+        ((CheckBox) root.findViewById(R.id.translations)).setChecked(mSharedPreferences.getBoolean("translations", false));
+        ((CheckBox) root.findViewById(R.id.show_twrp)).setChecked(mSharedPreferences.getBoolean("show_twrp", false));
 
 
-        final EditText branch = (EditText) root.findViewById(R.id.branch);
+        /*final EditText branch = (EditText) root.findViewById(R.id.branch);
         branch.setText(mSharedPreferences.getString("branch", DEFAULT_BRANCH));
         branch.addTextChangedListener(new TextWatcher() {
             public void afterTextChanged(Editable s) {
@@ -372,10 +366,10 @@ public class Main extends AppCompatActivity {
             }
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             public void onTextChanged(CharSequence s, int start, int before, int count) {}
-        });
+        });*/
         
         
-        if (mSharedPreferences.getBoolean("display_all", true)) {
+        if (mSharedPreferences.getBoolean("display_all", false)) {
             root.findViewById(R.id.devices_listview).setVisibility(View.GONE);
             root.findViewById(R.id.add_device).setVisibility(View.GONE);
             ((CheckBox) root.findViewById(R.id.all_devices)).setChecked(true);
@@ -415,9 +409,6 @@ public class Main extends AppCompatActivity {
                     mSharedPreferences.edit().putBoolean("display_all", false).apply();
                     root.findViewById(R.id.devices_listview).setVisibility(View.VISIBLE);
                     root.findViewById(R.id.add_device).setVisibility(View.VISIBLE);
-                    if (mSharedPreferences.getString("watched_devices", "").equals("")) {
-                        mSharedPreferences.edit().putString("watched_devices", "<?xml version=\"1.0\" encoding=\"UTF-8\"?><devicesList></devicesList>").apply();
-                    }
                     load_device_list(((ListView) root.findViewById(R.id.devices_listview)));
                 }
             }
@@ -426,6 +417,39 @@ public class Main extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 add_device(((ListView) root.findViewById(R.id.devices_listview)));
+            }
+        });
+
+        final long startTime = mSharedPreferences.getLong("start_time", Build.TIME);
+        final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        final TextView startDate = (TextView)root.findViewById(R.id.start_time);
+        startDate.setText(sdf.format(startTime));
+        startDate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Calendar c = Calendar.getInstance();
+                c.setTimeInMillis(startTime);
+                int day = c.get(Calendar.DAY_OF_MONTH);
+                int year = c.get(Calendar.YEAR);
+                int month = c.get(Calendar.MONTH);
+
+                DatePickerDialog datePickerDialog = new DatePickerDialog(Main.this,
+                        new DatePickerDialog.OnDateSetListener() {
+
+                            @Override
+                            public void onDateSet(DatePicker view, int year,
+                                                  int monthOfYear, int dayOfMonth) {
+                                Calendar c = Calendar.getInstance();
+                                c.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+                                c.set(Calendar.YEAR, year);
+                                c.set(Calendar.MONTH, monthOfYear);
+
+                                mSharedPreferences.edit().putLong("start_time", c.getTimeInMillis()).commit();
+                                startDate.setText(sdf.format(c.getTimeInMillis()));
+                                load();
+                            }
+                        }, year, month, day);
+                datePickerDialog.show();
             }
         });
         d.show();
@@ -446,7 +470,7 @@ public class Main extends AppCompatActivity {
         d.setCanceledOnTouchOutside(true);
 
 
-        ((EditText)root.findViewById(R.id.search_value)).setOnEditorActionListener(new TextView.OnEditorActionListener() {
+        /*((EditText)root.findViewById(R.id.search_value)).setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
@@ -457,21 +481,21 @@ public class Main extends AppCompatActivity {
                 }
                 return false;
             }
-        });
+        });*/
 
-        root.findViewById(R.id.report_missing_device).setOnClickListener(new OnClickListener() {
+        /*root.findViewById(R.id.report_missing_device).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 External.feedbackMail(mActivity, "OmniROM Changelog: Device request", "Please add my device to the filter list.\n" + Build.MANUFACTURER + " | " + Build.MODEL + " | " + Build.DEVICE + "\n");
             }
-        });
-        root.findViewById(R.id.search_button).setOnClickListener(new OnClickListener() {
+        });*/
+        /*root.findViewById(R.id.search_button).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 mDeviceFilterKeyword = ((EditText) root.findViewById(R.id.search_value)).getText().toString().trim();
                 load_all_device_list(((ListView) root.findViewById(R.id.devices_listview)));
             }
-        });
+        });*/
         ((ListView) root.findViewById(R.id.devices_listview)).setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> arg0, View view, int pos, long id) {
@@ -552,25 +576,9 @@ public class Main extends AppCompatActivity {
 
         Collections.sort(mDevicesList, new sortComparator());
 
-        SimpleAdapter sAdapter = new SimpleAdapter(mActivity, mDevicesList, R.layout.list_entry_device, new String[] { "name", "code", "code" }, new int[] { R.id.name, R.id.code, R.id.aside });
-        sAdapter.setViewBinder(all_devices_view_binder);
+        SimpleAdapter sAdapter = new SimpleAdapter(mActivity, mDevicesList, R.layout.list_entry_device, new String[] { "name", "code" }, new int[] { R.id.name, R.id.code });
         listView.setAdapter(sAdapter);
     }
-
-    private final SimpleAdapter.ViewBinder all_devices_view_binder = new SimpleAdapter.ViewBinder() {
-         @Override
-         public boolean setViewValue(final View view, Object data, final String textRepresentation) {
-             switch (view.getId()) {
-             case R.id.aside:
-                 if (Build.DEVICE.toLowerCase(Locale.getDefault()).equals(textRepresentation) || 
-                         Build.MODEL.toLowerCase(Locale.getDefault()).replace("gt-", "").equals(textRepresentation)) {
-                     ((TextView) view).setText(R.string.this_device);
-                 } else ((TextView) view).setText("");
-                 return true;
-             }
-             return false;
-         }
-    };
 
     void load_device_list(final ListView listView) {
         if(mWatchedDoc == null) {
@@ -642,7 +650,8 @@ public class Main extends AppCompatActivity {
         public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
             if ((Integer) mChangesList.get(position).get("type") == Change.TYPE_ITEM) {
 
-                if (mSharedPreferences.getString("list_action", "popup").equals("popup")) {
+
+                if (mSharedPreferences.getString("list_action", "expand").equals("popup")) {
                     Dialogs.changeDetails(mActivity, mChangesList.get(position), GERRIT_URL);
                 } else {
                     final TextView info = (TextView) view.findViewById(R.id.info);
@@ -685,4 +694,13 @@ public class Main extends AppCompatActivity {
         }
     }
 
+    private String getDefaultDevice() {
+        //return SystemProperties.getProperty("ro.omni.device");
+        return "";
+    }
+
+    private String getDefaultDeviceFilter() {
+        String device = getDefaultDevice();
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><devicesList>" + device + "</devicesList>";
+    }
 }

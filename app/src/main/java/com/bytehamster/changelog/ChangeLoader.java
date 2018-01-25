@@ -51,8 +51,9 @@ class ChangeLoader {
     }
 
     public List<Change> loadCached() {
-        if(Build.TIME != preferences.getLong("cachedBuildTime",0)) {
-            preferences.edit().putLong("cachedBuildTime",Build.TIME).apply();
+        long startTime = preferences.getLong("start_time", Build.TIME);
+        if(startTime != preferences.getLong("cachedBuildTime",0)) {
+            preferences.edit().putLong("cachedBuildTime",startTime).apply();
             db.clearCache();
         }
         return db.getChanges();
@@ -83,16 +84,17 @@ class ChangeLoader {
                 res = res.replace(")]}'\n", ""); // Gerrit uses malformed JSON
                 JSONArray result = new JSONArray(res);
 
+                long startTime = preferences.getLong("start_time", Build.TIME);
                 int size = result.length();
                 for(int i = 0;i<size;i++) {
                     Change c = parseResult((JSONObject)result.get(i));
                     if(c != null) {
                         if(firstCachedDate >= c.lastModified) {
                             break loader;
-                        } else if(c.lastModified < Build.TIME) {
+                        } else if(c.lastModified < startTime) {
                             break loader;
                         } else {
-                            if(c.date > Build.TIME && !inCache(c)) {
+                            if(c.date > startTime && !inCache(c)) {
                                 changes.add(c);
                                 db.addChange(c);
                             }

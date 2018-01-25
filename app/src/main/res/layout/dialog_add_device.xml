@@ -3,16 +3,16 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:orientation="vertical"
-              android:padding="16dp">
+              android:padding="24dp">
 
-    <Button
+    <!--<Button
         android:id="@+id/report_missing_device"
         style="?android:attr/buttonStyleSmall"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/report_missing_device" />
+        android:text="@string/report_missing_device" />-->
 
-    <LinearLayout
+    <!--<LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
 
@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:text="@string/search" />
 
-    </LinearLayout>
+    </LinearLayout>-->
 
     <ListView
         android:id="@+id/devices_listview"

@@ -1,18 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <PreferenceCategory android:title="@string/gerrit">
-        <Preference
-                android:key="server_url"
-                android:title="@string/server_url"
-                android:summary="@string/server_url"
-                android:defaultValue="@string/gerrit_url_omnirom"
-                android:dialogTitle="@string/server_url"/>
-    </PreferenceCategory>
-
     <PreferenceCategory android:title="@string/view">
         <ListPreference
-                android:defaultValue="popup"
+                android:defaultValue="expand"
                 android:entries="@array/list_action_entries"
                 android:entryValues="@array/list_action_values"
                 android:key="list_action"
