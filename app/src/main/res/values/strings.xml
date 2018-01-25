@@ -74,7 +74,7 @@
         	Anyway, you can open this app by pressing <b>Open</b>. You will not be prompted again.
         ]]>
     </string>
-    <string name="expanded_message" formatted="false">%message\nProject: %project\nBranch: %branch</string>
+    <string name="expanded_message" formatted="false">%message\nProject: %project</string>
     <string name="is_new">NEW:</string>
     <string name="error">Error.</string>
     <string name="open_gerrit">View on Gerrit</string>
@@ -104,6 +104,7 @@
     <string name="gerrit">Gerrit</string>
     <string name="view">View</string>
     <string name="other">Other</string>
-    <string name="start_time">Start time:</string>
+    <string name="start_time_label">Since:</string>
+    <string name="num_items_label">Changes:</string>
 
 </resources>

@@ -14,7 +14,7 @@
         android:background="@drawable/card_bg_selector"
         android:gravity="center_vertical"
         android:orientation="vertical"
-        android:padding="8dp" >
+        android:padding="10dp" >
 
         <LinearLayout
             android:layout_width="fill_parent"
@@ -28,8 +28,8 @@
                 android:layout_marginEnd="5dp"
                 android:text="@string/is_new"
                 android:textAlignment="center"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textColor="#ffcc0000"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textColor="@color/color_primary"
                 android:visibility="gone" />
 
             <TextView
@@ -38,7 +38,7 @@
                 android:layout_height="wrap_content"
                 android:singleLine="true"
                 android:text="@string/error"
-                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textColor="?android:attr/textColorPrimary" />
         </LinearLayout>
 
@@ -55,10 +55,9 @@
             android:id="@+id/info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
+            android:layout_marginTop="10dp"
             android:text="@string/error"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textSize="16sp"
             android:visibility="gone"
             android:textColor="?android:attr/textColorPrimary" />
 
@@ -74,14 +73,9 @@
                 android:id="@+id/open_gerrit"
                 android:textAllCaps="true"
                 android:textColor="@color/color_primary"
-                android:textSize="18sp"
-                android:paddingStart="15dp"
-                android:paddingEnd="15dp"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
+                android:padding="10dp"
                 style="?android:attr/buttonBarButtonStyle"
                 android:layout_gravity="end"
-                android:layout_marginTop="5dp"
                 android:focusable="false"
                 android:text="@string/open_gerrit"/>
 

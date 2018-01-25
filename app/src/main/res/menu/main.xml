@@ -11,7 +11,8 @@
         android:title="@string/refresh"/>-->
     <item
         android:id="@+id/action_filter"
-        app:showAsAction="never"
+        app:showAsAction="always"
+        android:icon="@drawable/ic_filter"
         android:title="@string/filter"/>
     <item
         android:id="@+id/action_settings"

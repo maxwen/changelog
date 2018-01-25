@@ -145,7 +145,7 @@ class ChangeLoader {
     private Change parseResult(JSONObject mCurrentObject) {
         try {
 
-            Date mDate = Main.mDateFormat.parse(mCurrentObject.getString("updated"));
+            Date mDate = Main.mDateFormatFilter.parse(mCurrentObject.getString("updated"));
 
             Change newChange = new Change();
 
@@ -164,10 +164,10 @@ class ChangeLoader {
             for(int i=0;i<length;i++) {
                 String comment = ((JSONObject)messages.get(i)).getString("message");
                 if (comment.startsWith("Change has been successfully merged into the git repository")) {
-                    mDate = Main.mDateFormat.parse(((JSONObject)messages.get(i)).getString("date"));
+                    mDate = Main.mDateFormatFilter.parse(((JSONObject)messages.get(i)).getString("date"));
                     break;
                 } else if (comment.startsWith("Change has been successfully rebased as")) {
-                    mDate = Main.mDateFormat.parse(((JSONObject)messages.get(i)).getString("date"));
+                    mDate = Main.mDateFormatFilter.parse(((JSONObject)messages.get(i)).getString("date"));
                     break;
                 }
             }

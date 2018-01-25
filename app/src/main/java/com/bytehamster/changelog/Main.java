@@ -40,6 +40,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import java.io.StringReader;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -53,32 +54,37 @@ import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-public class Main extends AppCompatActivity  {
+public class Main extends AppCompatActivity {
 
-    public static final String                   DEFAULT_GERRIT_URL   = "https://gerrit.omnirom.org/";
-    public static final String                   DEFAULT_BRANCH       = "android-8.1";
-    public static final int                      MAX_CHANGES          = 200;
-    public static final int                      MAX_CHANGES_FETCH    = 800;  // Max changes to be fetched
-    public static final int                      MAX_CHANGES_DB       = 1500; // Max changes to be loaded from DB
-    public static final SimpleDateFormat         mDateFormat          = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US);
-    public static final SimpleDateFormat         mDateDayFormat       = new SimpleDateFormat("EEE, dd MMM yyyy", Locale.US);
+    public static final String DEFAULT_GERRIT_URL = "https://gerrit.omnirom.org/";
+    public static final String DEFAULT_BRANCH = "android-8.1";
+    public static final int MAX_CHANGES = 200;
+    public static final int MAX_CHANGES_FETCH = 800;  // Max changes to be fetched
+    public static final int MAX_CHANGES_DB = 1500; // Max changes to be loaded from DB
 
-    private final ArrayList<Map<String, Object>> mChangesList         = new ArrayList<Map<String, Object>>();
-    private final ArrayList<Map<String, Object>> mDevicesList         = new ArrayList<Map<String, Object>>();
-    private final List<HashMap<String, Object>>  mWatchedList         = new ArrayList<HashMap<String, Object>>();
+    public static final SimpleDateFormat mDateFormatFilter = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US);
+    public static final DateFormat mDateFormat = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.SHORT);
+    public static final DateFormat mDateDayFormat = DateFormat.getDateInstance(DateFormat.DEFAULT);
 
-    private ListView                             mListView            = null;
-    private Activity                             mActivity            = null;
-    private SwipeRefreshLayout                   swipeContainer       = null;
-    private SharedPreferences                    mSharedPreferences   = null;
-    private String                               mDeviceFilterKeyword = "";
-    private String                               mLastDate            = "";
-    private boolean                              mIsLoading           = false;
-    private boolean                              mJustStarted         = true;
-    private Document                             mWatchedDoc          = null;
-    private ChangeAdapter                        mChangeAdapter       = null;
-    private int                                  mChangesCount        = 0;
-    private String                               GERRIT_URL           = "https://gerrit.omnirom.org/";
+
+    private final ArrayList<Map<String, Object>> mChangesList = new ArrayList<Map<String, Object>>();
+    private final ArrayList<Map<String, Object>> mDevicesList = new ArrayList<Map<String, Object>>();
+    private final List<HashMap<String, Object>> mWatchedList = new ArrayList<HashMap<String, Object>>();
+
+    private ListView mListView = null;
+    private Activity mActivity = null;
+    private SwipeRefreshLayout swipeContainer = null;
+    private SharedPreferences mSharedPreferences = null;
+    private String mDeviceFilterKeyword = "";
+    private String mLastDate = "";
+    private boolean mIsLoading = false;
+    private boolean mJustStarted = true;
+    private Document mWatchedDoc = null;
+    private ChangeAdapter mChangeAdapter = null;
+    private int mChangesCount = 0;
+    private String GERRIT_URL = "https://gerrit.omnirom.org/";
+    private TextView mNumItems;
+    private TextView mStartDate;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -104,7 +110,8 @@ public class Main extends AppCompatActivity  {
         });
         mListView.setOnScrollListener(new AbsListView.OnScrollListener() {
             @Override
-            public void onScrollStateChanged(AbsListView view, int scrollState) { }
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+            }
 
             @Override
             public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
@@ -119,23 +126,39 @@ public class Main extends AppCompatActivity  {
             mSharedPreferences.edit().putString("branch", "").commit();
         }
 
-		load();
-		checkAlerts();
-	}
+        final long startTime = mSharedPreferences.getLong("start_time", Build.TIME);
+        mStartDate = findViewById(R.id.start_time);
+        mStartDate.setText(mDateDayFormat.format(startTime));
+        mStartDate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                doSelectStartTime(new Runnable() {
+                    @Override
+                    public void run() {
+                        load();
+                    }
+                });
+            }
+        });
+
+        mNumItems = findViewById(R.id.num_items);
+        load();
+        checkAlerts();
+    }
 
     @Override
     public void onResume() {
         super.onResume();
         GERRIT_URL = mSharedPreferences.getString("server_url", DEFAULT_GERRIT_URL);
 
-        if(mJustStarted) {
+        if (mJustStarted) {
             mJustStarted = false;
         } else {
             load();
         }
     }
 
-    private void checkAlerts(){
+    private void checkAlerts() {
 
         /*if (! mSharedPreferences.getBoolean("warning_displayed", false)) {
             AlertDialog.Builder d = new AlertDialog.Builder(mActivity);
@@ -176,12 +199,14 @@ public class Main extends AppCompatActivity  {
 
         if (mIsLoading) return;
         mIsLoading = true;
+        final long startTime = mSharedPreferences.getLong("start_time", Build.TIME);
+        mStartDate.setText(mDateDayFormat.format(startTime));
 
         new Thread() {
             public void run() {
-                
+
                 if (!mChangesList.isEmpty()) mChangesList.clear();
-                
+
                 mActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -212,7 +237,7 @@ public class Main extends AppCompatActivity  {
                 mChangesCount = 0;
                 mLastDate = "-";
                 int change_size = changes.size();
-                for(int i = 0;i<change_size;i++) {
+                for (int i = 0; i < change_size; i++) {
                     Change currentChange = changes.get(i);
                     if (filter.isHidden(currentChange)) {
                         continue;
@@ -228,7 +253,7 @@ public class Main extends AppCompatActivity  {
                     mChangesList.add(currentChange.getHashMap(mActivity));
                     mChangesCount++;
 
-                    if(mChangesCount >= MAX_CHANGES) {
+                    if (mChangesCount >= MAX_CHANGES) {
                         break;
                     }
                 }
@@ -239,11 +264,13 @@ public class Main extends AppCompatActivity  {
                         hideProgress();
                         ((TextView) findViewById(android.R.id.empty)).setText(R.string.no_changes);
                         mChangeAdapter.update(mChangesList);
+                        /*final long startTime = mSharedPreferences.getLong("start_time", Build.TIME);
                         if(mChangesCount >= MAX_CHANGES) {
-                            getSupportActionBar().setTitle(getResources().getString(R.string.changelog) + " (" + MAX_CHANGES + "+)");
+                            getSupportActionBar().setTitle(getResources().getString(R.string.changelog) + " (" + MAX_CHANGES + "+) - " + mDateDayFormat.format(startTime));
                         } else {
-                            getSupportActionBar().setTitle(getResources().getString(R.string.changelog) + " (" + mChangesCount + ")");
-                        }
+                            getSupportActionBar().setTitle(getResources().getString(R.string.changelog) + " (" + mChangesCount + ") - " + mDateDayFormat.format(startTime));
+                        }*/
+                        mNumItems.setText(String.valueOf(mChangesCount));
                         mIsLoading = false;
                         swipeContainer.setRefreshing(false);
                     }
@@ -252,7 +279,7 @@ public class Main extends AppCompatActivity  {
         }.start();
     }
 
-    void hideProgress(){
+    void hideProgress() {
         AlphaAnimation alphaAnimation = new AlphaAnimation(1, 0);
         alphaAnimation.setDuration(300);
         findViewById(R.id.progress).startAnimation(alphaAnimation);
@@ -261,14 +288,14 @@ public class Main extends AppCompatActivity  {
             public void run() {
                 findViewById(R.id.progress).setVisibility(View.GONE);
             }
-          }, 280);
-        
+        }, 280);
+
         final AlphaAnimation alphaAnimation2 = new AlphaAnimation(0, 1);
         alphaAnimation2.setDuration(300);
         mListView.startAnimation(alphaAnimation2);
-        
+
         findViewById(android.R.id.empty).setVisibility(View.GONE);
-        if(mChangesList.isEmpty()) {
+        if (mChangesList.isEmpty()) {
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -277,7 +304,7 @@ public class Main extends AppCompatActivity  {
                     findViewById(android.R.id.empty).setVisibility(View.VISIBLE);
                     findViewById(android.R.id.empty).startAnimation(alphaAnimation);
                 }
-              }, 280);
+            }, 280);
         }
     }
 
@@ -317,9 +344,9 @@ public class Main extends AppCompatActivity  {
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
-	    }
+        }
     }
-    
+
     void filter() {
 
         try {
@@ -330,8 +357,7 @@ public class Main extends AppCompatActivity  {
             is.setCharacterStream(new StringReader(mSharedPreferences.getString("watched_devices", getDefaultDeviceFilter())));
             mWatchedDoc = db.parse(is);
             mWatchedDoc.getDocumentElement().normalize();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -367,8 +393,8 @@ public class Main extends AppCompatActivity  {
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             public void onTextChanged(CharSequence s, int start, int before, int count) {}
         });*/
-        
-        
+
+
         if (mSharedPreferences.getBoolean("display_all", false)) {
             root.findViewById(R.id.devices_listview).setVisibility(View.GONE);
             root.findViewById(R.id.add_device).setVisibility(View.GONE);
@@ -421,35 +447,18 @@ public class Main extends AppCompatActivity  {
         });
 
         final long startTime = mSharedPreferences.getLong("start_time", Build.TIME);
-        final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        final TextView startDate = (TextView)root.findViewById(R.id.start_time);
-        startDate.setText(sdf.format(startTime));
+        final TextView startDate = (TextView) root.findViewById(R.id.start_time);
+        startDate.setText(mDateDayFormat.format(startTime));
         startDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Calendar c = Calendar.getInstance();
-                c.setTimeInMillis(startTime);
-                int day = c.get(Calendar.DAY_OF_MONTH);
-                int year = c.get(Calendar.YEAR);
-                int month = c.get(Calendar.MONTH);
-
-                DatePickerDialog datePickerDialog = new DatePickerDialog(Main.this,
-                        new DatePickerDialog.OnDateSetListener() {
-
-                            @Override
-                            public void onDateSet(DatePicker view, int year,
-                                                  int monthOfYear, int dayOfMonth) {
-                                Calendar c = Calendar.getInstance();
-                                c.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-                                c.set(Calendar.YEAR, year);
-                                c.set(Calendar.MONTH, monthOfYear);
-
-                                mSharedPreferences.edit().putLong("start_time", c.getTimeInMillis()).commit();
-                                startDate.setText(sdf.format(c.getTimeInMillis()));
-                                load();
-                            }
-                        }, year, month, day);
-                datePickerDialog.show();
+                doSelectStartTime(new Runnable() {
+                    @Override
+                    public void run() {
+                        final long startTime = mSharedPreferences.getLong("start_time", Build.TIME);
+                        startDate.setText(mDateDayFormat.format(startTime));
+                    }
+                });
             }
         });
         d.show();
@@ -526,8 +535,7 @@ public class Main extends AppCompatActivity  {
             db = dbf.newDocumentBuilder();
             doc = db.parse(getAssets().open("projects.xml"));
             doc.getDocumentElement().normalize();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(mActivity, e.getMessage(), Toast.LENGTH_LONG).show();
         }
@@ -553,8 +561,10 @@ public class Main extends AppCompatActivity  {
                         if (properties.item(k).getNodeType() != Node.ELEMENT_NODE) continue;
                         Element property = (Element) properties.item(k);
 
-                        if (property.getNodeName().equals("name")) AddItemMap.put("name", oemName + " " + property.getTextContent());
-                        if (property.getNodeName().equals("code")) AddItemMap.put("code", property.getTextContent().toLowerCase(Locale.getDefault()));
+                        if (property.getNodeName().equals("name"))
+                            AddItemMap.put("name", oemName + " " + property.getTextContent());
+                        if (property.getNodeName().equals("code"))
+                            AddItemMap.put("code", property.getTextContent().toLowerCase(Locale.getDefault()));
 
                     }
 
@@ -576,14 +586,14 @@ public class Main extends AppCompatActivity  {
 
         Collections.sort(mDevicesList, new sortComparator());
 
-        SimpleAdapter sAdapter = new SimpleAdapter(mActivity, mDevicesList, R.layout.list_entry_device, new String[] { "name", "code" }, new int[] { R.id.name, R.id.code });
+        SimpleAdapter sAdapter = new SimpleAdapter(mActivity, mDevicesList, R.layout.list_entry_device, new String[]{"name", "code"}, new int[]{R.id.name, R.id.code});
         listView.setAdapter(sAdapter);
     }
 
     void load_device_list(final ListView listView) {
-        if(mWatchedDoc == null) {
+        if (mWatchedDoc == null) {
             // Not loaded. Try again later.
-            new Handler().postDelayed( new Runnable() {
+            new Handler().postDelayed(new Runnable() {
                 public void run() {
                     load_device_list(listView);
                 }
@@ -607,7 +617,8 @@ public class Main extends AppCompatActivity  {
                 if (properties.item(k).getNodeType() != Node.ELEMENT_NODE) continue;
                 Element property = (Element) properties.item(k);
 
-                if (property.getNodeName().equals("name")) AddItemMap.put("name", property.getTextContent());
+                if (property.getNodeName().equals("name"))
+                    AddItemMap.put("name", property.getTextContent());
 
             }
             mWatchedList.add(AddItemMap);
@@ -616,7 +627,7 @@ public class Main extends AppCompatActivity  {
         Collections.sort(mWatchedList, new sortComparator());
 
         SimpleAdapter sAdapter = new SimpleAdapter(mActivity, mWatchedList, android.R.layout.simple_list_item_1,
-                new String[] { "name" }, new int[] { android.R.id.text1 });
+                new String[]{"name"}, new int[]{android.R.id.text1});
 
         listView.setAdapter(sAdapter);
     }
@@ -702,5 +713,32 @@ public class Main extends AppCompatActivity  {
     private String getDefaultDeviceFilter() {
         String device = getDefaultDevice();
         return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><devicesList>" + device + "</devicesList>";
+    }
+
+    private void doSelectStartTime(final Runnable r) {
+        final long startTime = mSharedPreferences.getLong("start_time", Build.TIME);
+
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(startTime);
+        int day = c.get(Calendar.DAY_OF_MONTH);
+        int year = c.get(Calendar.YEAR);
+        int month = c.get(Calendar.MONTH);
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(Main.this,
+                new DatePickerDialog.OnDateSetListener() {
+
+                    @Override
+                    public void onDateSet(DatePicker view, int year,
+                                          int monthOfYear, int dayOfMonth) {
+                        Calendar c = Calendar.getInstance();
+                        c.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+                        c.set(Calendar.YEAR, year);
+                        c.set(Calendar.MONTH, monthOfYear);
+
+                        mSharedPreferences.edit().putLong("start_time", c.getTimeInMillis()).commit();
+                        r.run();
+                    }
+                }, year, month, day);
+        datePickerDialog.show();
     }
 }

@@ -22,7 +22,7 @@
             android:textAllCaps="true"
             android:text=""
             android:textColor="?android:attr/textColorPrimary"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
+            android:textAppearance="?android:attr/textAppearanceSmall" />
 
 
 </LinearLayout>
