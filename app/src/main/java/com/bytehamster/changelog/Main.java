@@ -33,6 +33,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.omnirom.omnichange.R;
+import org.omnirom.omnichange.SystemProperties;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -61,6 +62,7 @@ public class Main extends AppCompatActivity {
     public static final int MAX_CHANGES = 200;
     public static final int MAX_CHANGES_FETCH = 800;  // Max changes to be fetched
     public static final int MAX_CHANGES_DB = 1500; // Max changes to be loaded from DB
+    public static final String EMPTY_DEVICE_LIST = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><devicesList></devicesList>";
 
     public static final SimpleDateFormat mDateFormatFilter = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US);
     public static final DateFormat mDateFormat = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.SHORT);
@@ -70,6 +72,7 @@ public class Main extends AppCompatActivity {
     private final ArrayList<Map<String, Object>> mChangesList = new ArrayList<Map<String, Object>>();
     private final ArrayList<Map<String, Object>> mDevicesList = new ArrayList<Map<String, Object>>();
     private final List<HashMap<String, Object>> mWatchedList = new ArrayList<HashMap<String, Object>>();
+    private final Map<String, Map<String, Object>> mDevicesMap = new HashMap<String, Map<String, Object>>();
 
     private ListView mListView = null;
     private Activity mActivity = null;
@@ -142,6 +145,10 @@ public class Main extends AppCompatActivity {
         });
 
         mNumItems = findViewById(R.id.num_items);
+        loadDeviceMap();
+        if (mSharedPreferences.getString("watched_devices", null) == null) {
+            setDefaultDeviceFilter();
+        }
         load();
         checkAlerts();
     }
@@ -354,7 +361,8 @@ public class Main extends AppCompatActivity {
             DocumentBuilder db;
             db = dbf.newDocumentBuilder();
             InputSource is = new InputSource();
-            is.setCharacterStream(new StringReader(mSharedPreferences.getString("watched_devices", getDefaultDeviceFilter())));
+            String deviceListString = mSharedPreferences.getString("watched_devices", EMPTY_DEVICE_LIST);
+            is.setCharacterStream(new StringReader(deviceListString));
             mWatchedDoc = db.parse(is);
             mWatchedDoc.getDocumentElement().normalize();
         } catch (Exception e) {
@@ -526,64 +534,16 @@ public class Main extends AppCompatActivity {
     void load_all_device_list(ListView listView) {
         if (!mDevicesList.isEmpty()) mDevicesList.clear();
 
-        HashMap<String, Object> AddItemMap;
-
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-        DocumentBuilder db;
-        Document doc = null;
-        try {
-            db = dbf.newDocumentBuilder();
-            doc = db.parse(getAssets().open("projects.xml"));
-            doc.getDocumentElement().normalize();
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(mActivity, e.getMessage(), Toast.LENGTH_LONG).show();
-        }
-
-        if (doc != null) {
-
-            NodeList oemList = doc.getDocumentElement().getChildNodes();
-            for (int i = 0; i < oemList.getLength(); i++) {
-                if (oemList.item(i).getNodeType() != Node.ELEMENT_NODE) continue;
-                Element oem = (Element) oemList.item(i);
-
-                String oemName = oem.getAttribute("name");
-                NodeList deviceList = oem.getChildNodes();
-                for (int j = 0; j < deviceList.getLength(); j++) {
-                    if (deviceList.item(j).getNodeType() != Node.ELEMENT_NODE) continue;
-
-                    Element device = (Element) deviceList.item(j);
-                    NodeList properties = device.getChildNodes();
-                    AddItemMap = new HashMap<String, Object>();
-                    AddItemMap.put("device_element", device);
-
-                    for (int k = 0; k < properties.getLength(); k++) {
-                        if (properties.item(k).getNodeType() != Node.ELEMENT_NODE) continue;
-                        Element property = (Element) properties.item(k);
-
-                        if (property.getNodeName().equals("name"))
-                            AddItemMap.put("name", oemName + " " + property.getTextContent());
-                        if (property.getNodeName().equals("code"))
-                            AddItemMap.put("code", property.getTextContent().toLowerCase(Locale.getDefault()));
-
-                    }
-
-                    if (mDeviceFilterKeyword.equals("")) {
-                        mDevicesList.add(AddItemMap);
-                    } else {
-                        if (((String) AddItemMap.get("name")).toLowerCase(Locale.getDefault()).contains(mDeviceFilterKeyword.toLowerCase(Locale.getDefault()))
-                                || ((String) AddItemMap.get("code")).toLowerCase(Locale.getDefault()).contains(mDeviceFilterKeyword.toLowerCase(Locale.getDefault()))) {
-                            mDevicesList.add(AddItemMap);
-                        }
-                    }
+        for (String device  : mDevicesMap.keySet()) {
+            Map<String, Object> AddItemMap = mDevicesMap.get(device);
+            if (mDeviceFilterKeyword.equals("")) {
+                mDevicesList.add(AddItemMap);
+            } else {
+                if (device.toLowerCase(Locale.getDefault()).contains(mDeviceFilterKeyword.toLowerCase(Locale.getDefault()))) {
+                    mDevicesList.add(AddItemMap);
                 }
             }
-        } else {
-            AddItemMap = new HashMap<String, Object>();
-            AddItemMap.put("name", "Fatal error. Contact developer.");
-            mDevicesList.add(AddItemMap);
         }
-
         Collections.sort(mDevicesList, new sortComparator());
 
         SimpleAdapter sAdapter = new SimpleAdapter(mActivity, mDevicesList, R.layout.list_entry_device, new String[]{"name", "code"}, new int[]{R.id.name, R.id.code});
@@ -706,13 +666,26 @@ public class Main extends AppCompatActivity {
     }
 
     private String getDefaultDevice() {
-        //return SystemProperties.getProperty("ro.omni.device");
-        return "";
+        return SystemProperties.get("ro.omni.device");
     }
 
-    private String getDefaultDeviceFilter() {
+    private void setDefaultDeviceFilter() {
         String device = getDefaultDevice();
-        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><devicesList>" + device + "</devicesList>";
+        try {
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            DocumentBuilder db;
+            db = dbf.newDocumentBuilder();
+            InputSource is = new InputSource();
+            is.setCharacterStream(new StringReader(EMPTY_DEVICE_LIST));
+            Document doc = db.parse(is);
+            doc.getDocumentElement().normalize();
+
+            Node new_node = doc.importNode((Element) mDevicesMap.get(device).get("device_element"), true);
+            doc.getDocumentElement().appendChild(new_node);
+            String defaultDevice = StringTools.XmlToString(mActivity, doc);
+            mSharedPreferences.edit().putString("watched_devices", defaultDevice).apply();
+        } catch (Exception e) {
+        }
     }
 
     private void doSelectStartTime(final Runnable r) {
@@ -740,5 +713,59 @@ public class Main extends AppCompatActivity {
                     }
                 }, year, month, day);
         datePickerDialog.show();
+    }
+
+    private void loadDeviceMap() {
+        if (!mDevicesMap.isEmpty()) mDevicesMap.clear();
+
+        HashMap<String, Object> AddItemMap;
+
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db;
+        Document doc = null;
+        try {
+            db = dbf.newDocumentBuilder();
+            doc = db.parse(getAssets().open("projects.xml"));
+            doc.getDocumentElement().normalize();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(mActivity, e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+
+        if (doc != null) {
+
+            NodeList oemList = doc.getDocumentElement().getChildNodes();
+            for (int i = 0; i < oemList.getLength(); i++) {
+                if (oemList.item(i).getNodeType() != Node.ELEMENT_NODE) continue;
+                Element oem = (Element) oemList.item(i);
+
+                String oemName = oem.getAttribute("name");
+                NodeList deviceList = oem.getChildNodes();
+                for (int j = 0; j < deviceList.getLength(); j++) {
+                    if (deviceList.item(j).getNodeType() != Node.ELEMENT_NODE) continue;
+
+                    Element device = (Element) deviceList.item(j);
+                    NodeList properties = device.getChildNodes();
+                    AddItemMap = new HashMap<String, Object>();
+                    AddItemMap.put("device_element", device);
+                    String deviceName = null;
+                    for (int k = 0; k < properties.getLength(); k++) {
+                        if (properties.item(k).getNodeType() != Node.ELEMENT_NODE) continue;
+                        Element property = (Element) properties.item(k);
+
+                        if (property.getNodeName().equals("name")) {
+                            AddItemMap.put("name", property.getTextContent());
+                        }
+                        if (property.getNodeName().equals("code")) {
+                            deviceName = property.getTextContent();
+                            AddItemMap.put("code", property.getTextContent());
+                        }
+                    }
+                    if (deviceName != null) {
+                        mDevicesMap.put(deviceName, AddItemMap);
+                    }
+                }
+            }
+        }
     }
 }

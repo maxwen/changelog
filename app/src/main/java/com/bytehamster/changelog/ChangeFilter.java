@@ -57,7 +57,7 @@ class ChangeFilter {
     }
 
     void refreshWatchedDevices() {
-        String watchedDevices = prefs.getString("watched_devices", getDefaultDeviceFilter());
+        String watchedDevices = prefs.getString("watched_devices", Main.EMPTY_DEVICE_LIST);
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             DocumentBuilder db;
@@ -81,14 +81,5 @@ class ChangeFilter {
         catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    private String getDefaultDevice() {
-        return System.getProperty("ro.omni.device");
-    }
-
-    private String getDefaultDeviceFilter() {
-        String device = getDefaultDevice();
-        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><devicesList>" + device + "</devicesList>";
     }
 }
