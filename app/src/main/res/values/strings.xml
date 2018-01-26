@@ -107,5 +107,6 @@
     <string name="other">Other</string>
     <string name="start_time_label">Since:</string>
     <string name="num_items_label">Changes:</string>
-
+    <string name="build_time_label">Build:</string>
+    <string name="menu_date_label">Since</string>
 </resources>
