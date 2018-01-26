@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
-import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -15,20 +14,22 @@ import android.preference.PreferenceManager;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
+import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.DatePicker;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -56,7 +57,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 public class Main extends AppCompatActivity {
-
+    private static final String TAG = "Main";
     public static final String DEFAULT_GERRIT_URL = "https://gerrit.omnirom.org/";
     public static final String DEFAULT_BRANCH = "android-8.1";
     public static final int MAX_CHANGES = 200;
@@ -71,14 +72,14 @@ public class Main extends AppCompatActivity {
 
     private final ArrayList<Map<String, Object>> mChangesList = new ArrayList<Map<String, Object>>();
     private final ArrayList<Map<String, Object>> mDevicesList = new ArrayList<Map<String, Object>>();
-    private final List<HashMap<String, Object>> mWatchedList = new ArrayList<HashMap<String, Object>>();
     private final Map<String, Map<String, Object>> mDevicesMap = new HashMap<String, Map<String, Object>>();
+    private final Map<String, Map<String, Object>> mWatchedMap = new HashMap<String, Map<String, Object>>();
 
     private ListView mListView = null;
     private Activity mActivity = null;
     private SwipeRefreshLayout swipeContainer = null;
     private SharedPreferences mSharedPreferences = null;
-    private String mDeviceFilterKeyword = "";
+    private String mDeviceFilterKeyword;
     private String mLastDate = "";
     private boolean mIsLoading = false;
     private boolean mJustStarted = true;
@@ -166,40 +167,6 @@ public class Main extends AppCompatActivity {
     }
 
     private void checkAlerts() {
-
-        /*if (! mSharedPreferences.getBoolean("warning_displayed", false)) {
-            AlertDialog.Builder d = new AlertDialog.Builder(mActivity);
-            d.setCancelable(false);
-            d.setTitle(R.string.first_warning);
-            d.setMessage(Html.fromHtml(getResources().getString(R.string.first_warning_message)));
-            d.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    mSharedPreferences.edit().putBoolean("warning_displayed", true).apply();
-                }
-            });
-            d.show();
-        }*/
-
-        /*if (!Build.DISPLAY.contains("omni") && !mSharedPreferences.getBoolean("openApp", false)) {
-            AlertDialog.Builder d = new AlertDialog.Builder(mActivity);
-            d.setCancelable(false);
-            d.setTitle(R.string.not_supported);
-            d.setMessage(Html.fromHtml(getResources().getString(R.string.not_supported_content)));
-            d.setNegativeButton(R.string.close, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    finish();
-                }
-            });
-            d.setPositiveButton(R.string.open, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    mSharedPreferences.edit().putBoolean("openApp", true).apply();
-                }
-            });
-            d.show();
-        }*/
     }
 
     private void load() {
@@ -271,12 +238,6 @@ public class Main extends AppCompatActivity {
                         hideProgress();
                         ((TextView) findViewById(android.R.id.empty)).setText(R.string.no_changes);
                         mChangeAdapter.update(mChangesList);
-                        /*final long startTime = mSharedPreferences.getLong("start_time", Build.TIME);
-                        if(mChangesCount >= MAX_CHANGES) {
-                            getSupportActionBar().setTitle(getResources().getString(R.string.changelog) + " (" + MAX_CHANGES + "+) - " + mDateDayFormat.format(startTime));
-                        } else {
-                            getSupportActionBar().setTitle(getResources().getString(R.string.changelog) + " (" + mChangesCount + ") - " + mDateDayFormat.format(startTime));
-                        }*/
                         mNumItems.setText(String.valueOf(mChangesCount));
                         mIsLoading = false;
                         swipeContainer.setRefreshing(false);
@@ -326,22 +287,6 @@ public class Main extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
-            /*case R.id.action_info:
-    
-                String msg = getResources().getString(R.string.info_content);
-                msg = msg.replace("%buildtime", mDateFormat.format(Build.TIME));
-                msg = msg.replace("%lastrefresh", mDateFormat.format(mSharedPreferences.getLong("lastRefresh", 0)));
-
-                AlertDialog.Builder d = new AlertDialog.Builder(mActivity);
-                d.setCancelable(true);
-                d.setTitle(R.string.info);
-                d.setMessage(Html.fromHtml(msg));
-                d.setPositiveButton(R.string.ok, null);
-                d.show().setCanceledOnTouchOutside(true);
-                return true;
-            case R.id.action_refresh:
-                load();
-                return true;*/
             case R.id.action_filter:
                 filter();
                 return true;
@@ -355,71 +300,43 @@ public class Main extends AppCompatActivity {
     }
 
     void filter() {
-
-        try {
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db;
-            db = dbf.newDocumentBuilder();
-            InputSource is = new InputSource();
-            String deviceListString = mSharedPreferences.getString("watched_devices", EMPTY_DEVICE_LIST);
-            is.setCharacterStream(new StringReader(deviceListString));
-            mWatchedDoc = db.parse(is);
-            mWatchedDoc.getDocumentElement().normalize();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
         final AlertDialog.Builder b = new AlertDialog.Builder(this);
         b.setCancelable(true);
         b.setTitle(R.string.filter);
         final View root = View.inflate(this, R.layout.dialog_filter, null);
         b.setView(root);
 
-
-        b.setOnDismissListener(new OnDismissListener() {
+        b.setNeutralButton(R.string.add_device, new DialogInterface.OnClickListener() {
             @Override
-            public void onDismiss(DialogInterface dialog) {
+            public void onClick(DialogInterface dialog, int which) {
+                add_device();
+            }
+        });
+
+        b.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
                 load();
             }
         });
-        b.setPositiveButton(R.string.ok, null);
 
-        final Dialog d = b.create();
+        final AlertDialog d = b.create();
 
-        d.setCanceledOnTouchOutside(true);
-
+        d.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                final Button neutralButton = d.getButton(DialogInterface.BUTTON_NEUTRAL);
+                if (mSharedPreferences.getBoolean("display_all", false)) {
+                    neutralButton.setEnabled(false);
+                } else {
+                    neutralButton.setEnabled(true);
+                }
+            }
+        });
+        ((CheckBox) root.findViewById(R.id.all_devices)).setChecked(mSharedPreferences.getBoolean("display_all", false));
         ((CheckBox) root.findViewById(R.id.translations)).setChecked(mSharedPreferences.getBoolean("translations", false));
         ((CheckBox) root.findViewById(R.id.show_twrp)).setChecked(mSharedPreferences.getBoolean("show_twrp", false));
 
-
-        /*final EditText branch = (EditText) root.findViewById(R.id.branch);
-        branch.setText(mSharedPreferences.getString("branch", DEFAULT_BRANCH));
-        branch.addTextChangedListener(new TextWatcher() {
-            public void afterTextChanged(Editable s) {
-                mSharedPreferences.edit().putString("branch", s.toString()).apply();
-            }
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-        });*/
-
-
-        if (mSharedPreferences.getBoolean("display_all", false)) {
-            root.findViewById(R.id.devices_listview).setVisibility(View.GONE);
-            root.findViewById(R.id.add_device).setVisibility(View.GONE);
-            ((CheckBox) root.findViewById(R.id.all_devices)).setChecked(true);
-        } else {
-            ((CheckBox) root.findViewById(R.id.all_devices)).setChecked(false);
-            load_device_list(((ListView) root.findViewById(R.id.devices_listview)));
-        }
-
-        ((ListView) root.findViewById(R.id.devices_listview)).setOnItemClickListener(new OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> arg0, View view, int pos, long id) {
-                mWatchedDoc.getDocumentElement().removeChild((Element) mWatchedList.get(pos).get("device_element"));
-                mSharedPreferences.edit().putString("watched_devices", StringTools.XmlToString(mActivity, mWatchedDoc)).apply();
-                load_device_list(((ListView) root.findViewById(R.id.devices_listview)));
-            }
-        });
         ((CheckBox) root.findViewById(R.id.translations)).setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -435,110 +352,49 @@ public class Main extends AppCompatActivity {
         ((CheckBox) root.findViewById(R.id.all_devices)).setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                final Button neutralButton = d.getButton(DialogInterface.BUTTON_NEUTRAL);
                 if (isChecked) {
                     mSharedPreferences.edit().putBoolean("display_all", true).apply();
-                    root.findViewById(R.id.devices_listview).setVisibility(View.GONE);
-                    root.findViewById(R.id.add_device).setVisibility(View.GONE);
+                    neutralButton.setEnabled(false);
                 } else {
                     mSharedPreferences.edit().putBoolean("display_all", false).apply();
-                    root.findViewById(R.id.devices_listview).setVisibility(View.VISIBLE);
-                    root.findViewById(R.id.add_device).setVisibility(View.VISIBLE);
-                    load_device_list(((ListView) root.findViewById(R.id.devices_listview)));
+                    neutralButton.setEnabled(true);
                 }
             }
         });
-        root.findViewById(R.id.add_device).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                add_device(((ListView) root.findViewById(R.id.devices_listview)));
-            }
-        });
 
-        final long startTime = mSharedPreferences.getLong("start_time", Build.TIME);
-        final TextView startDate = (TextView) root.findViewById(R.id.start_time);
-        startDate.setText(mDateDayFormat.format(startTime));
-        startDate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                doSelectStartTime(new Runnable() {
-                    @Override
-                    public void run() {
-                        final long startTime = mSharedPreferences.getLong("start_time", Build.TIME);
-                        startDate.setText(mDateDayFormat.format(startTime));
-                    }
-                });
-            }
-        });
         d.show();
     }
 
-    void add_device(final ListView v) {
-
-        mDeviceFilterKeyword = "";
+    void add_device() {
+        mDeviceFilterKeyword = null;
 
         final AlertDialog.Builder b = new AlertDialog.Builder(this);
         b.setCancelable(true);
-        b.setTitle(R.string.add_device);
-        b.setPositiveButton(R.string.cancel, null);
+        b.setTitle(R.string.device_list);
+        b.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                load();
+            }
+        });
         final View root = View.inflate(this, R.layout.dialog_add_device, null);
         b.setView(root);
 
         final Dialog d = b.create();
-        d.setCanceledOnTouchOutside(true);
-
-
-        /*((EditText)root.findViewById(R.id.search_value)).setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                    mDeviceFilterKeyword = ((EditText) root.findViewById(R.id.search_value)).getText().toString().trim();
-                    load_all_device_list(((ListView) root.findViewById(R.id.devices_listview)));
-                }
-                return false;
-            }
-        });*/
-
-        /*root.findViewById(R.id.report_missing_device).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                External.feedbackMail(mActivity, "OmniROM Changelog: Device request", "Please add my device to the filter list.\n" + Build.MANUFACTURER + " | " + Build.MODEL + " | " + Build.DEVICE + "\n");
-            }
-        });*/
-        /*root.findViewById(R.id.search_button).setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mDeviceFilterKeyword = ((EditText) root.findViewById(R.id.search_value)).getText().toString().trim();
-                load_all_device_list(((ListView) root.findViewById(R.id.devices_listview)));
-            }
-        });*/
-        ((ListView) root.findViewById(R.id.devices_listview)).setOnItemClickListener(new OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> arg0, View view, int pos, long id) {
-                Node new_node = mWatchedDoc.importNode((Element) mDevicesList.get(pos).get("device_element"), true);
-                mWatchedDoc.getDocumentElement().appendChild(new_node);
-                mSharedPreferences.edit().putString("watched_devices", StringTools.XmlToString(mActivity, mWatchedDoc)).apply();
-
-                d.dismiss();
-                load_device_list(v);
-            }
-        });
-
         d.show();
 
         load_all_device_list(((ListView) root.findViewById(R.id.devices_listview)));
-
     }
 
-    void load_all_device_list(ListView listView) {
-        if (!mDevicesList.isEmpty()) mDevicesList.clear();
-
-        for (String device  : mDevicesMap.keySet()) {
-            Map<String, Object> AddItemMap = mDevicesMap.get(device);
-            if (mDeviceFilterKeyword.equals("")) {
-                mDevicesList.add(AddItemMap);
-            } else {
+    void load_all_device_list(final ListView listView) {
+        mDevicesList.clear();
+        loadWatchedDeviceList();
+        if (mDeviceFilterKeyword == null) {
+            mDevicesList.addAll(mDevicesMap.values());
+        } else {
+            for (String device : mDevicesMap.keySet()) {
+                Map<String, Object> AddItemMap = mDevicesMap.get(device);
                 if (device.toLowerCase(Locale.getDefault()).contains(mDeviceFilterKeyword.toLowerCase(Locale.getDefault()))) {
                     mDevicesList.add(AddItemMap);
                 }
@@ -546,50 +402,52 @@ public class Main extends AppCompatActivity {
         }
         Collections.sort(mDevicesList, new sortComparator());
 
-        SimpleAdapter sAdapter = new SimpleAdapter(mActivity, mDevicesList, R.layout.list_entry_device, new String[]{"name", "code"}, new int[]{R.id.name, R.id.code});
-        listView.setAdapter(sAdapter);
-    }
-
-    void load_device_list(final ListView listView) {
-        if (mWatchedDoc == null) {
-            // Not loaded. Try again later.
-            new Handler().postDelayed(new Runnable() {
-                public void run() {
-                    load_device_list(listView);
-                }
-            }, 500);
-            return;
-        }
-        if (!mWatchedList.isEmpty()) mWatchedList.clear();
-
-        HashMap<String, Object> AddItemMap;
-
-        NodeList devicesList = mWatchedDoc.getDocumentElement().getChildNodes();
-        for (int i = 0; i < devicesList.getLength(); i++) {
-            if (devicesList.item(i).getNodeType() != Node.ELEMENT_NODE) continue;
-
-            Element device = (Element) devicesList.item(i);
-            AddItemMap = new HashMap<String, Object>();
-            NodeList properties = device.getChildNodes();
-            AddItemMap.put("device_element", device);
-
-            for (int k = 0; k < properties.getLength(); k++) {
-                if (properties.item(k).getNodeType() != Node.ELEMENT_NODE) continue;
-                Element property = (Element) properties.item(k);
-
-                if (property.getNodeName().equals("name"))
-                    AddItemMap.put("name", property.getTextContent());
-
+        final BaseAdapter deviceListAdapter = new BaseAdapter() {
+            @Override
+            public int getCount() {
+                return mDevicesList.size();
             }
-            mWatchedList.add(AddItemMap);
-        }
 
-        Collections.sort(mWatchedList, new sortComparator());
+            @Override
+            public Object getItem(int position) {
+                return mDevicesList.get(position);
+            }
 
-        SimpleAdapter sAdapter = new SimpleAdapter(mActivity, mWatchedList, android.R.layout.simple_list_item_1,
-                new String[]{"name"}, new int[]{android.R.id.text1});
+            @Override
+            public long getItemId(int position) {
+                return 0;
+            }
 
-        listView.setAdapter(sAdapter);
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                convertView = getLayoutInflater().inflate(R.layout.list_entry_device, null, false);
+                TextView name = convertView.findViewById(R.id.name);
+                TextView code = convertView.findViewById(R.id.code);
+                CheckBox watched = convertView.findViewById(R.id.watched);
+                final Map<String, Object> deviceEntry = mDevicesList.get(position);
+
+                name.setText((String) deviceEntry.get("name"));
+                final String deviceName = (String) deviceEntry.get("code");
+                code.setText(deviceName);
+                watched.setChecked(mWatchedMap.keySet().contains(deviceName));
+                watched.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if (!isChecked) {
+                            mWatchedDoc.getDocumentElement().removeChild((Element) mWatchedMap.get(deviceName).get("device_element"));
+                        } else {
+                            Node new_node = mWatchedDoc.importNode((Element) deviceEntry.get("device_element"), true);
+                            mWatchedDoc.getDocumentElement().appendChild(new_node);
+                        }
+                        String watchedDevices = StringTools.XmlToString(mActivity, mWatchedDoc);
+                        mSharedPreferences.edit().putString("watched_devices", watchedDevices).apply();
+                        loadWatchedDeviceList();
+                    }
+                });
+                return convertView;
+            }
+        };
+        listView.setAdapter(deviceListAdapter);
     }
 
     private final AdapterView.OnItemLongClickListener MainListLongClickListener = new AdapterView.OnItemLongClickListener() {
@@ -609,7 +467,7 @@ public class Main extends AppCompatActivity {
                         startActivity(intent);
                     }
                 });
-                d.show().setCanceledOnTouchOutside(true);
+                d.show();
             }
 
             return true;
@@ -672,6 +530,7 @@ public class Main extends AppCompatActivity {
     private void setDefaultDeviceFilter() {
         String device = getDefaultDevice();
         try {
+            loadDeviceMap();
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             DocumentBuilder db;
             db = dbf.newDocumentBuilder();
@@ -684,6 +543,7 @@ public class Main extends AppCompatActivity {
             doc.getDocumentElement().appendChild(new_node);
             String defaultDevice = StringTools.XmlToString(mActivity, doc);
             mSharedPreferences.edit().putString("watched_devices", defaultDevice).apply();
+            Log.d(TAG, "setDefaultDeviceFilter = " + defaultDevice);
         } catch (Exception e) {
         }
     }
@@ -716,7 +576,7 @@ public class Main extends AppCompatActivity {
     }
 
     private void loadDeviceMap() {
-        if (!mDevicesMap.isEmpty()) mDevicesMap.clear();
+        mDevicesMap.clear();
 
         HashMap<String, Object> AddItemMap;
 
@@ -758,7 +618,7 @@ public class Main extends AppCompatActivity {
                         }
                         if (property.getNodeName().equals("code")) {
                             deviceName = property.getTextContent();
-                            AddItemMap.put("code", property.getTextContent());
+                            AddItemMap.put("code", deviceName);
                         }
                     }
                     if (deviceName != null) {
@@ -766,6 +626,50 @@ public class Main extends AppCompatActivity {
                     }
                 }
             }
+        }
+    }
+
+    void loadWatchedDeviceList() {
+        try {
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            DocumentBuilder db;
+
+            db = dbf.newDocumentBuilder();
+            InputSource is = new InputSource();
+            String deviceListString = mSharedPreferences.getString("watched_devices", EMPTY_DEVICE_LIST);
+            is.setCharacterStream(new StringReader(deviceListString));
+            mWatchedDoc = db.parse(is);
+            mWatchedDoc.getDocumentElement().normalize();
+
+            mWatchedMap.clear();
+
+            HashMap<String, Object> AddItemMap;
+
+            NodeList devicesList = mWatchedDoc.getDocumentElement().getChildNodes();
+            for (int i = 0; i < devicesList.getLength(); i++) {
+                if (devicesList.item(i).getNodeType() != Node.ELEMENT_NODE) continue;
+
+                Element device = (Element) devicesList.item(i);
+                NodeList properties = device.getChildNodes();
+                AddItemMap = new HashMap<String, Object>();
+                AddItemMap.put("device_element", device);
+                String deviceName = null;
+
+                for (int k = 0; k < properties.getLength(); k++) {
+                    if (properties.item(k).getNodeType() != Node.ELEMENT_NODE) continue;
+                    Element property = (Element) properties.item(k);
+
+                    if (property.getNodeName().equals("code")) {
+                        deviceName = property.getTextContent();
+                    }
+                }
+                if (deviceName != null) {
+                    mWatchedMap.put(deviceName, AddItemMap);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

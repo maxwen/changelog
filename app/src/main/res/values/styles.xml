@@ -8,9 +8,4 @@
         <item name="android:windowBackground">@color/window_bg</item>
     </style>
 
-    <style name="MyActionBar" parent="@android:style/Widget.Holo.Light.ActionBar.Solid.Inverse">
-        <item name="android:background">@color/color_primary</item>
-        <item name="android:height">@dimen/abc_action_bar_default_height_material</item>
-    </style>
-
 </resources>

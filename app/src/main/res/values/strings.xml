@@ -14,7 +14,8 @@
     <string name="cancel">Cancel</string>
     <string name="filter">Filter</string>
     <string name="filter_all">All devices</string>
-    <string name="add_device">Add device</string>
+    <string name="add_device">Devices...</string>
+    <string name="device_list">Devices</string>
     <string name="this_device">This device</string>
     <string name="report_missing_device">Report missing device</string>
     <string name="animate_new">Highlight new items</string>

@@ -95,7 +95,6 @@ class Dialogs {
         d.setNegativeButton("Gerrit", null);
         d.setPositiveButton(R.string.ok, null);
         Dialog dlg = d.create();
-        dlg.setCanceledOnTouchOutside(true);
 
         dlg.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
