@@ -20,8 +20,8 @@ android {
 
     defaultConfig {
         applicationId "com.bytehamster.changelog"
-        minSdkVersion 19
-        targetSdkVersion 26
+        minSdkVersion 25
+        targetSdkVersion 25
 
         playAccountConfig = playAccountConfigs.defaultAccountConfig
     }

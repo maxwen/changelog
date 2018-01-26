@@ -25,32 +25,18 @@ support_library_root_dir := prebuilts/sdk/current/support
 endif
 
 LOCAL_STATIC_JAVA_LIBRARIES += android-support-v4 \
-    android-support-v7-appcompat \
-    android-support-v7-recyclerview \
-    android-support-v14-preference \
-    android-support-v7-preference \
-    android-support-annotations \
-    android-support-design
+    android-support-v7-appcompat
 
 LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/res \
-                      $(support_library_root_dir)/v14/preference/res \
-                      $(support_library_root_dir)/v7/preference/res \
-                      $(support_library_root_dir)/v7/appcompat/res \
-                      $(support_library_root_dir)/v7/recyclerview/res \
-                      $(support_library_root_dir)/design/res
+    $(support_library_root_dir)/v7/appcompat/res
 
 LOCAL_AAPT_FLAGS := --auto-add-overlay \
-    --extra-packages android.support.v14.preference \
-    --extra-packages android.support.v7.preference \
-    --extra-packages android.support.v7.appcompat \
-    --extra-packages android.support.v7.recyclerview \
-    --extra-packages android.support.design
+    --extra-packages android.support.v7.appcompat
 
 LOCAL_JAR_EXCLUDE_FILES := none
 LOCAL_PROGUARD_FLAG_FILES := proguard-rules.pro
 LOCAL_SRC_FILES += $(call all-java-files-under, java)
 LOCAL_PACKAGE_NAME := OmniChange
-LOCAL_CERTIFICATE := platform
 LOCAL_MODULE_TAGS := optional
 include $(BUILD_PACKAGE)
 

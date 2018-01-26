@@ -4,9 +4,9 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.Preference;
+import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
-import android.support.v7.preference.Preference;
-import android.support.v7.preference.PreferenceFragmentCompat;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.widget.TextView;
@@ -14,14 +14,17 @@ import android.widget.Toast;
 
 import org.omnirom.omnichange.R;
 
-public class PreferenceFragment extends PreferenceFragmentCompat {
+public class SettingsFragment extends PreferenceFragment {
 
     @Override
-    public void onCreatePreferences(Bundle bundle, String s) {
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.prefs);
 
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        setUpPreferences();
+    }
 
+    private void setUpPreferences() {
         findPreference("clear_cache").setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             public boolean onPreferenceClick(Preference preference) {
                 clearCache();
