@@ -130,12 +130,12 @@ public class Main extends AppCompatActivity {
             mSharedPreferences.edit().putString("branch", "").commit();
         }
 
-        final long startTime = mSharedPreferences.getLong("start_time", Build.TIME);
+        final long startTime = mSharedPreferences.getLong("start_time", getUnifiedBuildTime());
         mStartDate = findViewById(R.id.start_time);
         mStartDate.setText(mDateDayFormat.format(startTime));
 
         TextView buildDate = findViewById(R.id.build_time);
-        buildDate.setText(mDateDayFormat.format(Build.TIME));
+        buildDate.setText(mDateDayFormat.format(getUnifiedBuildTime()));
 
         mNumItems = findViewById(R.id.num_items);
         loadDeviceMap();
@@ -165,7 +165,7 @@ public class Main extends AppCompatActivity {
 
         if (mIsLoading) return;
         mIsLoading = true;
-        final long startTime = mSharedPreferences.getLong("start_time", Build.TIME);
+        final long startTime = mSharedPreferences.getLong("start_time", getUnifiedBuildTime());
         mStartDate.setText(mDateDayFormat.format(startTime));
 
         new Thread() {
@@ -549,7 +549,7 @@ public class Main extends AppCompatActivity {
     }
 
     private void doSelectStartTime(final Runnable r) {
-        final long startTime = mSharedPreferences.getLong("start_time", Build.TIME);
+        final long startTime = mSharedPreferences.getLong("start_time", getUnifiedBuildTime());
 
         Calendar c = Calendar.getInstance();
         c.setTimeInMillis(startTime);
@@ -567,6 +567,8 @@ public class Main extends AppCompatActivity {
                         c.set(Calendar.DAY_OF_MONTH, dayOfMonth);
                         c.set(Calendar.YEAR, year);
                         c.set(Calendar.MONTH, monthOfYear);
+                        c.set(Calendar.HOUR_OF_DAY, 0);
+                        c.set(Calendar.MINUTE, 0);
 
                         mSharedPreferences.edit().putLong("start_time", c.getTimeInMillis()).commit();
                         r.run();
@@ -671,5 +673,13 @@ public class Main extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static long getUnifiedBuildTime() {
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(Build.TIME);
+        c.set(Calendar.HOUR_OF_DAY, 0);
+        c.set(Calendar.MINUTE, 0);
+        return c.getTimeInMillis();
     }
 }

@@ -2,7 +2,7 @@ package com.bytehamster.changelog;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -51,7 +51,7 @@ class ChangeLoader {
     }
 
     public List<Change> loadCached() {
-        long startTime = preferences.getLong("start_time", Build.TIME);
+        long startTime = preferences.getLong("start_time", Main.getUnifiedBuildTime());
         if(startTime != preferences.getLong("cachedBuildTime",0)) {
             preferences.edit().putLong("cachedBuildTime",startTime).apply();
             db.clearCache();
@@ -84,7 +84,7 @@ class ChangeLoader {
                 res = res.replace(")]}'\n", ""); // Gerrit uses malformed JSON
                 JSONArray result = new JSONArray(res);
 
-                long startTime = preferences.getLong("start_time", Build.TIME);
+                long startTime = preferences.getLong("start_time", Main.getUnifiedBuildTime());
                 int size = result.length();
                 for(int i = 0;i<size;i++) {
                     Change c = parseResult((JSONObject)result.get(i));
