@@ -85,6 +85,10 @@ class ChangeLoader {
                 JSONArray result = new JSONArray(res);
 
                 long startTime = preferences.getLong("start_time", Main.getUnifiedBuildTime());
+                long endTime = preferences.getLong("end_time", 0);
+                if (endTime == 0){
+                    endTime = System.currentTimeMillis();
+                }
                 int size = result.length();
                 for(int i = 0;i<size;i++) {
                     Change c = parseResult((JSONObject)result.get(i));
@@ -94,7 +98,7 @@ class ChangeLoader {
                         } else if(c.lastModified < startTime) {
                             break loader;
                         } else {
-                            if(c.date > startTime && !inCache(c)) {
+                            if(c.date > startTime && c.date < endTime && !inCache(c)) {
                                 changes.add(c);
                                 db.addChange(c);
                             }

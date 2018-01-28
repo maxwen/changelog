@@ -129,13 +129,13 @@ public class Main extends AppCompatActivity {
         if (mSharedPreferences.getString("branch", DEFAULT_BRANCH).equals("All")) {
             mSharedPreferences.edit().putString("branch", "").commit();
         }
-
+        //mSharedPreferences.edit().putLong("cachedBuildTime", 0).apply();
         final long startTime = mSharedPreferences.getLong("start_time", getUnifiedBuildTime());
         mStartDate = findViewById(R.id.start_time);
         mStartDate.setText(mDateDayFormat.format(startTime));
 
         TextView buildDate = findViewById(R.id.build_time);
-        buildDate.setText(mDateDayFormat.format(getUnifiedBuildTime()));
+        buildDate.setText(mDateFormat.format(Build.TIME));
 
         mNumItems = findViewById(R.id.num_items);
         loadDeviceMap();
@@ -166,6 +166,7 @@ public class Main extends AppCompatActivity {
         if (mIsLoading) return;
         mIsLoading = true;
         final long startTime = mSharedPreferences.getLong("start_time", getUnifiedBuildTime());
+        final boolean endTimeFilter = mSharedPreferences.getBoolean("build_time", false);
         mStartDate.setText(mDateDayFormat.format(startTime));
 
         new Thread() {
@@ -202,13 +203,32 @@ public class Main extends AppCompatActivity {
 
                 mChangesCount = 0;
                 mLastDate = "-";
+                long buildTime = Build.TIME;
+                Change prevChange = null;
+                Change firstChange = null;
+
+                boolean buildItemAdded = false;
+
                 int change_size = changes.size();
                 for (int i = 0; i < change_size; i++) {
                     Change currentChange = changes.get(i);
                     if (filter.isHidden(currentChange)) {
                         continue;
                     }
+                    if (firstChange == null) {
+                        firstChange = currentChange;
+                    }
+                    if (endTimeFilter && currentChange.date > buildTime) {
+                        continue;
+                    }
 
+                    if (prevChange != null && currentChange.date <= buildTime && prevChange.date > buildTime) {
+                        Map<String, Object> new_item = new HashMap<String, Object>();
+                        new_item.put("title", Main.mDateFormat.format(buildTime));
+                        new_item.put("type", Change.TYPE_BUILD);
+                        mChangesList.add(new_item);
+                        buildItemAdded = true;
+                    }
                     if (!mLastDate.equals(currentChange.dateDay)) {
                         Map<String, Object> new_item = new HashMap<String, Object>();
                         new_item.put("title", currentChange.dateDay);
@@ -217,10 +237,25 @@ public class Main extends AppCompatActivity {
                         mLastDate = currentChange.dateDay;
                     }
                     mChangesList.add(currentChange.getHashMap(mActivity));
+
                     mChangesCount++;
+                    prevChange = currentChange;
 
                     if (mChangesCount >= MAX_CHANGES) {
                         break;
+                    }
+                }
+                if (!buildItemAdded) {
+                    if (prevChange != null && prevChange.date > buildTime && startTime < buildTime) {
+                        Map<String, Object> new_item = new HashMap<String, Object>();
+                        new_item.put("title", Main.mDateFormat.format(buildTime));
+                        new_item.put("type", Change.TYPE_BUILD);
+                        mChangesList.add(new_item);
+                    } else if (firstChange != null && firstChange.date > buildTime && startTime < buildTime) {
+                        Map<String, Object> new_item = new HashMap<String, Object>();
+                        new_item.put("title", Main.mDateFormat.format(buildTime));
+                        new_item.put("type", Change.TYPE_BUILD);
+                        mChangesList.add(0, new_item);
                     }
                 }
 
@@ -336,6 +371,7 @@ public class Main extends AppCompatActivity {
         ((CheckBox) root.findViewById(R.id.all_devices)).setChecked(mSharedPreferences.getBoolean("display_all", false));
         ((CheckBox) root.findViewById(R.id.translations)).setChecked(mSharedPreferences.getBoolean("translations", false));
         ((CheckBox) root.findViewById(R.id.show_twrp)).setChecked(mSharedPreferences.getBoolean("show_twrp", false));
+        ((CheckBox) root.findViewById(R.id.build_time)).setChecked(mSharedPreferences.getBoolean("build_time", false));
 
         ((CheckBox) root.findViewById(R.id.translations)).setOnCheckedChangeListener(new OnCheckedChangeListener() {
             @Override
@@ -362,7 +398,12 @@ public class Main extends AppCompatActivity {
                 }
             }
         });
-
+        ((CheckBox) root.findViewById(R.id.build_time)).setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                mSharedPreferences.edit().putBoolean("build_time", isChecked).apply();
+            }
+        });
         d.show();
     }
 

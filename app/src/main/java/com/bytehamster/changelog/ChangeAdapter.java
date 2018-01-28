@@ -19,11 +19,11 @@ import java.util.Map;
 
 class ChangeAdapter extends BaseAdapter {
 
-    private final Activity                 mActivity;
-    private final LayoutInflater           mInflater;
+    private final Activity mActivity;
+    private final LayoutInflater mInflater;
 
     private ArrayList<Map<String, Object>> mArrayList;
-    private SharedPreferences              mSharedPreferences = null;
+    private SharedPreferences mSharedPreferences = null;
     private String gerrit_url = "";
 
     public ChangeAdapter(Activity a, ArrayList<Map<String, Object>> arrayList, String gerrit_url) {
@@ -68,60 +68,70 @@ class ChangeAdapter extends BaseAdapter {
 
             if (convertView == null) {
                 switch (((Integer) mArrayList.get(position).get("type"))) {
-                case Change.TYPE_ITEM:
-                    view = mInflater.inflate(R.layout.list_entry, parent, false);
-                    view.setTag(Change.TYPE_ITEM);
-                    break;
-                case Change.TYPE_HEADER:
-                    view = mInflater.inflate(R.layout.list_header, parent, false);
-                    view.setTag(Change.TYPE_HEADER);
-                    break;
+                    case Change.TYPE_ITEM:
+                        view = mInflater.inflate(R.layout.list_entry, parent, false);
+                        view.setTag(Change.TYPE_ITEM);
+                        break;
+                    case Change.TYPE_HEADER:
+                        view = mInflater.inflate(R.layout.list_header, parent, false);
+                        view.setTag(Change.TYPE_HEADER);
+                        break;
+                    case Change.TYPE_BUILD:
+                        view = mInflater.inflate(R.layout.list_build, parent, false);
+                        view.setTag(Change.TYPE_BUILD);
                 }
             } else if (!convertView.getTag().equals(mArrayList.get(position).get("type"))) {
                 switch (((Integer) mArrayList.get(position).get("type"))) {
-                case Change.TYPE_ITEM:
-                    view = mInflater.inflate(R.layout.list_entry, parent, false);
-                    view.setTag(Change.TYPE_ITEM);
-                    view.findViewById(R.id.info).setTag(View.GONE);
-                    break;
-                case Change.TYPE_HEADER:
-                    view = mInflater.inflate(R.layout.list_header, parent, false);
-                    view.setTag(Change.TYPE_HEADER);
-                    break;
+                    case Change.TYPE_ITEM:
+                        view = mInflater.inflate(R.layout.list_entry, parent, false);
+                        view.setTag(Change.TYPE_ITEM);
+                        view.findViewById(R.id.info).setTag(View.GONE);
+                        break;
+                    case Change.TYPE_HEADER:
+                        view = mInflater.inflate(R.layout.list_header, parent, false);
+                        view.setTag(Change.TYPE_HEADER);
+                        break;
+                    case Change.TYPE_BUILD:
+                        view = mInflater.inflate(R.layout.list_build, parent, false);
+                        view.setTag(Change.TYPE_BUILD);
+                        break;
                 }
             } else view = convertView;
 
             switch (((Integer) mArrayList.get(position).get("type"))) {
-            case Change.TYPE_ITEM:
-                ((TextView) view.findViewById(R.id.title)).setText((String) mArrayList.get(position).get("title"));
-                ((TextView) view.findViewById(R.id.secondline)).setText((String) mArrayList.get(position).get("secondline"));
-                ((TextView) view.findViewById(R.id.info)).setText((String) mArrayList.get(position).get("expand"));
+                case Change.TYPE_ITEM:
+                    ((TextView) view.findViewById(R.id.title)).setText((String) mArrayList.get(position).get("title"));
+                    ((TextView) view.findViewById(R.id.secondline)).setText((String) mArrayList.get(position).get("secondline"));
+                    ((TextView) view.findViewById(R.id.info)).setText((String) mArrayList.get(position).get("expand"));
 
-                int visibility = (Integer) mArrayList.get(position).get("visibility");
-                //noinspection ResourceType
-                view.findViewById(R.id.info).setVisibility(visibility);
-                //noinspection ResourceType
-                view.findViewById(R.id.buttons).setVisibility(visibility);
+                    int visibility = (Integer) mArrayList.get(position).get("visibility");
+                    //noinspection ResourceType
+                    view.findViewById(R.id.info).setVisibility(visibility);
+                    //noinspection ResourceType
+                    view.findViewById(R.id.buttons).setVisibility(visibility);
 
-                if ((Boolean) mArrayList.get(position).get("is_new") && mSharedPreferences.getBoolean("animate_new", true)) {
-                    view.findViewById(R.id.is_new).setVisibility(View.VISIBLE);
-                } else {
-                    view.findViewById(R.id.is_new).setVisibility(View.GONE);
-                }
-
-                view.findViewById(R.id.open_gerrit).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Uri uri = Uri.parse(gerrit_url + "#/c/" + mArrayList.get(position).get("number"));
-                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                        mActivity.startActivity(intent);
+                    if ((Boolean) mArrayList.get(position).get("is_new") && mSharedPreferences.getBoolean("animate_new", true)) {
+                        view.findViewById(R.id.is_new).setVisibility(View.VISIBLE);
+                    } else {
+                        view.findViewById(R.id.is_new).setVisibility(View.GONE);
                     }
-                });
 
-                break;
-            case Change.TYPE_HEADER:
-                ((TextView) view.findViewById(R.id.title)).setText((String) mArrayList.get(position).get("title"));
-                break;
+                    view.findViewById(R.id.open_gerrit).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Uri uri = Uri.parse(gerrit_url + "#/c/" + mArrayList.get(position).get("number"));
+                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                            mActivity.startActivity(intent);
+                        }
+                    });
+
+                    break;
+                case Change.TYPE_HEADER:
+                    ((TextView) view.findViewById(R.id.title)).setText((String) mArrayList.get(position).get("title"));
+                    break;
+                case Change.TYPE_BUILD:
+                    ((TextView) view.findViewById(R.id.title)).setText((String) mArrayList.get(position).get("title"));
+                    break;
             }
         } else {
             view = mInflater.inflate(R.layout.list_entry, parent, false);
