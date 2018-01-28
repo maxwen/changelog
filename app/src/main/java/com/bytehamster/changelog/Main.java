@@ -204,6 +204,7 @@ public class Main extends AppCompatActivity {
                 mChangesCount = 0;
                 mLastDate = "-";
                 long buildTime = Build.TIME;
+                String buildTimeString = getResources().getString(R.string.build_time_label) + " " + Main.mDateFormat.format(buildTime);
                 Change prevChange = null;
                 Change firstChange = null;
 
@@ -224,7 +225,7 @@ public class Main extends AppCompatActivity {
 
                     if (prevChange != null && currentChange.date <= buildTime && prevChange.date > buildTime) {
                         Map<String, Object> new_item = new HashMap<String, Object>();
-                        new_item.put("title", Main.mDateFormat.format(buildTime));
+                        new_item.put("title", buildTimeString);
                         new_item.put("type", Change.TYPE_BUILD);
                         mChangesList.add(new_item);
                         buildItemAdded = true;
@@ -248,12 +249,12 @@ public class Main extends AppCompatActivity {
                 if (!buildItemAdded) {
                     if (prevChange != null && prevChange.date > buildTime && startTime < buildTime) {
                         Map<String, Object> new_item = new HashMap<String, Object>();
-                        new_item.put("title", Main.mDateFormat.format(buildTime));
+                        new_item.put("title", buildTimeString);
                         new_item.put("type", Change.TYPE_BUILD);
                         mChangesList.add(new_item);
                     } else if (firstChange != null && firstChange.date > buildTime && startTime < buildTime) {
                         Map<String, Object> new_item = new HashMap<String, Object>();
-                        new_item.put("title", Main.mDateFormat.format(buildTime));
+                        new_item.put("title", buildTimeString);
                         new_item.put("type", Change.TYPE_BUILD);
                         mChangesList.add(0, new_item);
                     }

@@ -13,13 +13,13 @@
     
     <string name="cancel">Cancel</string>
     <string name="filter">Filter</string>
-    <string name="filter_all">All devices</string>
+    <string name="filter_all">Show all devices</string>
     <string name="add_device">Devices...</string>
     <string name="device_list">Devices</string>
     <string name="this_device">This device</string>
     <string name="animate_new">Highlight new items</string>
     <string name="animate_new_sum">Highlight items that are shown for the first time</string>
-    <string name="translations">Translations</string>
+    <string name="translations">Show translations changes</string>
     <string name="clear_cache">Clear cache</string>
     <string name="clear_cache_sum">In case of any problem, hit this</string>
     <string name="cleared_cache">Cache cleared.</string>
@@ -52,14 +52,15 @@
     <string name="open_website">Website</string>
     <string name="branches">Branches: </string>
 
-    <string name="show_twrp">Show changes of TWRP</string>
+    <string name="show_twrp">Show recovery changes</string>
     <string name="about">About</string>
     <string name="about_message" translatable="false"><![CDATA[
         © ByteHamster, 2016–2017
+        <br />
+        © OmniROM, 2018
         <br /><br />
-        This app is <a href="https://gitlab.com/ByteHamster/changelog">open source</a>!
+        This app is <a href="https://github.com/omnirom/android_packages_apps_OmniChange/blob/android-8.1/LICENSE">open source</a>!
         <br /><br />
-        <a href="http://www.tools.bytehamster.com/privacy/changelog.txt">Privacy policy</a>
     ]]></string>
 
     <string name="retry">Retry</string>
@@ -71,5 +72,5 @@
     <string name="num_items_label">Changes:</string>
     <string name="build_time_label">Build:</string>
     <string name="menu_date_label">Since</string>
-    <string name="build_time">Only before build time</string>
+    <string name="build_time">Show before build time</string>
 </resources>
