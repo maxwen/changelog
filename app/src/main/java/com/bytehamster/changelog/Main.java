@@ -33,6 +33,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.omnirom.omnichange.OmniBuildData;
 import org.omnirom.omnichange.R;
 import org.omnirom.omnichange.SystemProperties;
 import org.w3c.dom.Document;
@@ -46,6 +47,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -60,6 +62,7 @@ public class Main extends AppCompatActivity {
     private static final String TAG = "Main";
     public static final String DEFAULT_GERRIT_URL = "https://gerrit.omnirom.org/";
     public static final String DEFAULT_BRANCH = "android-8.1";
+    public static final String DEFAULT_VERSION = "8.1.0";
     public static final int MAX_CHANGES = 200;
     public static final int MAX_CHANGES_FETCH = 800;  // Max changes to be fetched
     public static final int MAX_CHANGES_DB = 1500; // Max changes to be loaded from DB
@@ -89,6 +92,7 @@ public class Main extends AppCompatActivity {
     private String GERRIT_URL = "https://gerrit.omnirom.org/";
     private TextView mNumItems;
     private TextView mStartDate;
+    private List<Long> mWeeklyBuilds;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -129,7 +133,6 @@ public class Main extends AppCompatActivity {
         if (mSharedPreferences.getString("branch", DEFAULT_BRANCH).equals("All")) {
             mSharedPreferences.edit().putString("branch", "").commit();
         }
-        //mSharedPreferences.edit().putLong("cachedBuildTime", 0).apply();
         final long startTime = mSharedPreferences.getLong("start_time", getUnifiedBuildTime());
         mStartDate = findViewById(R.id.start_time);
         mStartDate.setText(mDateDayFormat.format(startTime));
@@ -184,6 +187,9 @@ public class Main extends AppCompatActivity {
                     }
                 });
 
+                if (mWeeklyBuilds == null) {
+                    mWeeklyBuilds = OmniBuildData.getWeeklyBuildTimes();
+                }
 
                 ChangeLoader loader = new ChangeLoader(mActivity, mSharedPreferences, GERRIT_URL);
                 ChangeFilter filter = new ChangeFilter(mSharedPreferences);
@@ -207,9 +213,16 @@ public class Main extends AppCompatActivity {
                 String buildTimeString = getResources().getString(R.string.build_time_label) + " " + Main.mDateFormat.format(buildTime);
                 Change prevChange = null;
                 Change firstChange = null;
-
                 boolean buildItemAdded = false;
+                List<Long> weeklyBuilds = null;
 
+                if (mWeeklyBuilds != null) {
+                    weeklyBuilds = new CopyOnWriteArrayList<>(mWeeklyBuilds);
+                    // same day as latest weekly - dont add this weekly entry
+                    if (weeklyBuilds.size() > 0 && weeklyBuilds.get(0) == getUnifiedBuildTime()) {
+                        weeklyBuilds.remove(0);
+                    }
+                }
                 int change_size = changes.size();
                 for (int i = 0; i < change_size; i++) {
                     Change currentChange = changes.get(i);
@@ -230,6 +243,24 @@ public class Main extends AppCompatActivity {
                         mChangesList.add(new_item);
                         buildItemAdded = true;
                     }
+
+                    if (weeklyBuilds != null) {
+                        int j = 0;
+                        for (Long weekly : weeklyBuilds) {
+                            if (prevChange != null && currentChange.date <= weekly && prevChange.date > weekly) {
+                                Map<String, Object> new_item = new HashMap<String, Object>();
+                                new_item.put("title", getResources().getString(R.string.build_time_label) +
+                                        " " + Main.mDateDayFormat.format(weekly));
+                                new_item.put("type", Change.TYPE_WEEKLY);
+                                mChangesList.add(new_item);
+                                // no longer need to be checked
+                                weeklyBuilds.remove(j);
+                                break;
+                            }
+                            j++;
+                        }
+                    }
+
                     if (!mLastDate.equals(currentChange.dateDay)) {
                         Map<String, Object> new_item = new HashMap<String, Object>();
                         new_item.put("title", currentChange.dateDay);
@@ -237,6 +268,7 @@ public class Main extends AppCompatActivity {
                         mChangesList.add(new_item);
                         mLastDate = currentChange.dateDay;
                     }
+
                     mChangesList.add(currentChange.getHashMap(mActivity));
 
                     mChangesCount++;
@@ -247,12 +279,12 @@ public class Main extends AppCompatActivity {
                     }
                 }
                 if (!buildItemAdded) {
-                    if (prevChange != null && prevChange.date > buildTime && startTime < buildTime) {
+                    if (prevChange != null && prevChange.date > buildTime) {
                         Map<String, Object> new_item = new HashMap<String, Object>();
                         new_item.put("title", buildTimeString);
                         new_item.put("type", Change.TYPE_BUILD);
                         mChangesList.add(new_item);
-                    } else if (firstChange != null && firstChange.date > buildTime && startTime < buildTime) {
+                    } else if (firstChange != null && firstChange.date < buildTime) {
                         Map<String, Object> new_item = new HashMap<String, Object>();
                         new_item.put("title", buildTimeString);
                         new_item.put("type", Change.TYPE_BUILD);
@@ -565,7 +597,7 @@ public class Main extends AppCompatActivity {
         }
     }
 
-    private String getDefaultDevice() {
+    public static String getDefaultDevice() {
         return SystemProperties.get("ro.omni.device");
     }
 
@@ -722,6 +754,7 @@ public class Main extends AppCompatActivity {
         c.setTimeInMillis(Build.TIME);
         c.set(Calendar.HOUR_OF_DAY, 0);
         c.set(Calendar.MINUTE, 0);
+        c.set(Calendar.SECOND, 0);
         return c.getTimeInMillis();
     }
 }

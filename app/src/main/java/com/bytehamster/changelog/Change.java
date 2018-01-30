@@ -11,6 +11,7 @@ class Change {
     public static final int TYPE_ITEM   = 0;
     public static final int TYPE_HEADER = 1;
     public static final int TYPE_BUILD = 2;
+    public static final int TYPE_WEEKLY = 3;
 
     //public static final int                      TYPE_MAX_COUNT       = 2;
 

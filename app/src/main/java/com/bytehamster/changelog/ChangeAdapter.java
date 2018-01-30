@@ -79,6 +79,11 @@ class ChangeAdapter extends BaseAdapter {
                     case Change.TYPE_BUILD:
                         view = mInflater.inflate(R.layout.list_build, parent, false);
                         view.setTag(Change.TYPE_BUILD);
+                        break;
+                    case Change.TYPE_WEEKLY:
+                        view = mInflater.inflate(R.layout.list_weekly, parent, false);
+                        view.setTag(Change.TYPE_WEEKLY);
+                        break;
                 }
             } else if (!convertView.getTag().equals(mArrayList.get(position).get("type"))) {
                 switch (((Integer) mArrayList.get(position).get("type"))) {
@@ -94,6 +99,10 @@ class ChangeAdapter extends BaseAdapter {
                     case Change.TYPE_BUILD:
                         view = mInflater.inflate(R.layout.list_build, parent, false);
                         view.setTag(Change.TYPE_BUILD);
+                        break;
+                    case Change.TYPE_WEEKLY:
+                        view = mInflater.inflate(R.layout.list_weekly, parent, false);
+                        view.setTag(Change.TYPE_WEEKLY);
                         break;
                 }
             } else view = convertView;
@@ -127,9 +136,8 @@ class ChangeAdapter extends BaseAdapter {
 
                     break;
                 case Change.TYPE_HEADER:
-                    ((TextView) view.findViewById(R.id.title)).setText((String) mArrayList.get(position).get("title"));
-                    break;
                 case Change.TYPE_BUILD:
+                case Change.TYPE_WEEKLY:
                     ((TextView) view.findViewById(R.id.title)).setText((String) mArrayList.get(position).get("title"));
                     break;
             }
