@@ -137,7 +137,17 @@ class ChangeAdapter extends BaseAdapter {
                     break;
                 case Change.TYPE_HEADER:
                 case Change.TYPE_BUILD:
+                    ((TextView) view.findViewById(R.id.title)).setText((String) mArrayList.get(position).get("title"));
+                    break;
                 case Change.TYPE_WEEKLY:
+                    view.setOnLongClickListener(new View.OnLongClickListener() {
+                        @Override
+                        public boolean onLongClick(View v) {
+                            mSharedPreferences.edit().putLong("start_time", (Long) mArrayList.get(position).get("date")).commit();
+                            ((Main) mActivity).load();
+                            return true;
+                        }
+                    });
                     ((TextView) view.findViewById(R.id.title)).setText((String) mArrayList.get(position).get("title"));
                     break;
             }

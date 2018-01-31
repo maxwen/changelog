@@ -4,11 +4,8 @@
     <!--<item
         android:id="@+id/action_info"
         app:showAsAction="never"
-        android:title="@string/info"/>
-    <item
-        android:id="@+id/action_refresh"
-        app:showAsAction="never"
-        android:title="@string/refresh"/>-->
+        android:title="@string/info"/>-->
+
     <item
         android:id="@+id/action_date"
         app:showAsAction="always"
@@ -19,6 +16,11 @@
         app:showAsAction="always"
         android:icon="@drawable/ic_filter"
         android:title="@string/filter"/>
+    <item
+        android:id="@+id/action_refresh"
+        app:showAsAction="ifRoom"
+        android:icon="@drawable/ic_refresh"
+        android:title="@string/refresh"/>
     <item
         android:id="@+id/action_settings"
         app:showAsAction="never"

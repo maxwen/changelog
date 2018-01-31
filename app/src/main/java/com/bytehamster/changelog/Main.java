@@ -164,7 +164,7 @@ public class Main extends AppCompatActivity {
     private void checkAlerts() {
     }
 
-    private void load() {
+    public void load() {
 
         if (mIsLoading) return;
         mIsLoading = true;
@@ -252,6 +252,7 @@ public class Main extends AppCompatActivity {
                                 new_item.put("title", getResources().getString(R.string.build_time_label) +
                                         " " + Main.mDateDayFormat.format(weekly));
                                 new_item.put("type", Change.TYPE_WEEKLY);
+                                new_item.put("date", weekly);
                                 mChangesList.add(new_item);
                                 // no longer need to be checked
                                 weeklyBuilds.remove(j);
@@ -347,6 +348,9 @@ public class Main extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
+            case R.id.action_refresh:
+                load();
+                return true;
             case R.id.action_filter:
                 filter();
                 return true;
