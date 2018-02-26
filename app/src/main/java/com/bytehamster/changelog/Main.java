@@ -1,6 +1,7 @@
 package com.bytehamster.changelog;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -12,8 +13,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -47,18 +46,18 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-public class Main extends AppCompatActivity {
+public class Main extends Activity {
     private static final String TAG = "Main";
     public static final String DEFAULT_GERRIT_URL = "https://gerrit.omnirom.org/";
     public static final String DEFAULT_BRANCH = "android-8.1";
@@ -100,7 +99,7 @@ public class Main extends AppCompatActivity {
         setContentView(R.layout.main);
 
         mActivity = this;
-        getSupportActionBar().setTitle(R.string.changelog);
+        setTitle(R.string.changelog);
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         GERRIT_URL = mSharedPreferences.getString("server_url", DEFAULT_GERRIT_URL);
         mChangeAdapter = new ChangeAdapter(mActivity, mChangesList, GERRIT_URL);
@@ -183,7 +182,7 @@ public class Main extends AppCompatActivity {
                         mChangeAdapter.clear();
                         findViewById(R.id.progress).setVisibility(View.VISIBLE);
                         ((TextView) findViewById(android.R.id.empty)).setText("");
-                        getSupportActionBar().setTitle(getResources().getString(R.string.changelog));
+                        setTitle(getResources().getString(R.string.changelog));
                     }
                 });
 
